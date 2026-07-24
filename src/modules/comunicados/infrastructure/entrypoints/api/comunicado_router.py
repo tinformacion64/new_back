@@ -3,7 +3,7 @@ Router de API para el recurso Comunicado (Sección IV SGC2I).
 """
 from uuid import UUID
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 
 from ....domain.entities import Comunicado, EstadoComunicado
 from ....domain.ports import ComunicadoRepository
@@ -29,6 +29,7 @@ from modules.catalogos.infrastructure.persistence import (
 
 from shared.infrastructure.security.security import get_current_active_user
 from shared.domain.exceptions import BusinessRuleViolationError
+from config.container import container
 
 router = APIRouter(prefix="/comunicados", tags=["comunicados"])
 
@@ -90,6 +91,39 @@ def _to_response(comunicado: Comunicado) -> ComunicadoResponse:
         archivoUrl=comunicado.archivoUrl,
         tareas=tareas_response,
     )
+
+
+@router.post("/upload", status_code=status.HTTP_200_OK)
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_active_user),
+):
+    """
+    Sube un archivo a Cloudinary y retorna la URL pública.
+    El frontend debe usar esta URL en el campo `archivoUrl` al crear/actualizar un comunicado.
+    """
+    if not file.content_type:
+        raise HTTPException(status_code=400, detail="No se pudo determinar el tipo de archivo")
+
+    file_bytes = await file.read()
+    if len(file_bytes) == 0:
+        raise HTTPException(status_code=400, detail="El archivo está vacío")
+
+    storage = container.get_file_storage()
+
+    try:
+        url = storage.save(
+            file_content=file_bytes,
+            filename=file.filename or "archivo",
+            content_type=file.content_type,
+        )
+        return {
+            "url": url,
+            "nombreOriginal": file.filename,
+            "contentType": file.content_type,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al subir archivo: {str(e)}")
 
 
 @router.post("/", response_model=ComunicadoResponse, status_code=status.HTTP_201_CREATED)
