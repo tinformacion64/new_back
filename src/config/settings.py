@@ -33,6 +33,14 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
+     # Almacenamiento
+    STORAGE_TYPE: str = "local"  # "local" o "cloudinary"
+    
+    # Cloudinary
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
