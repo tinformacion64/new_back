@@ -2,9 +2,11 @@
 Adaptador de persistencia para el repositorio de Comunicados.
 Usa SQLAlchemy Core, respetando el esquema existente.
 """
+import os
 from uuid import UUID
 from typing import List, Optional, Dict, Any
 from contextlib import contextmanager
+from urllib.parse import urlparse
 
 from sqlalchemy import Table, Column, String, DateTime, insert, select
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -136,12 +138,19 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
 
                 if comunicado.archivoUrl:
                     import uuid
+                    # Extraer nombre original de la URL de Cloudinary si es posible,
+                    # si no, usar un default descriptivo.
+                    parsed = urlparse(comunicado.archivoUrl)
+                    nombre_original = os.path.basename(parsed.path) or "documento_adjunto"
+                    # Limpiar extensión o UUID si es muy largo; truncar a 255
+                    nombre_original = nombre_original[:255] or "documento_adjunto"
+
                     session.execute(
                         insert(self.archivo_table).values(
                             idArchivo=uuid.uuid4(),
                             idComunicado=row.idComunicado,
                             urlArchivo=comunicado.archivoUrl,
-                            nombreOriginal="documento_adjunto.pdf"
+                            nombreOriginal=nombre_original,
                         )
                     )
 
