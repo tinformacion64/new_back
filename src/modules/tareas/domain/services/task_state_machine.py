@@ -61,14 +61,14 @@ class TaskStateMachine:
                     f"No se puede revisar la tarea si no está entregada (estado actual: '{curr}')."
                 )
             # Nota: de RECHAZADA a EN_PROCESO ya se maneja de forma natural, pero de ENTREGADA a RECHAZADA (regresa a EN_PROCESO) es la transición del Director.
-            if "Director" not in user_roles:
+            if not any(r and "director" in r.lower() for r in user_roles):
                 raise BusinessRuleViolationError(
                     f"Solo los usuarios con rol 'Director' pueden marcar la tarea como '{target}'."
                 )
 
         # 5. A CANCELADA: Solo Director o el creador/asignador (idEmpleadoRegistro del comunicado padre)
         elif target == "CANCELADA":
-            is_director = "Director" in user_roles
+            is_director = any(r and "director" in r.lower() for r in user_roles)
             is_creator = comunicado_creator_id is not None and user_id == comunicado_creator_id
             if not (is_director or is_creator):
                 raise BusinessRuleViolationError(

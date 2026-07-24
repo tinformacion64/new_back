@@ -138,7 +138,8 @@ def require_roles(allowed_roles: List[str]):
     """
     def checker(current_user: Dict[str, Any] = Depends(get_current_active_user)) -> Dict[str, Any]:
         user_roles = current_user.get("cargos_nombres", [])
-        if not any(role in user_roles for role in allowed_roles):
+        allowed_lower = [a.lower() for a in allowed_roles]
+        if not any(role and any(allowed in role.lower() for allowed in allowed_lower) for role in user_roles):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Se requiere alguno de estos roles: {', '.join(allowed_roles)}",

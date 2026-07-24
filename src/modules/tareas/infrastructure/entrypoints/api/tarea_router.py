@@ -224,7 +224,7 @@ def _transicionar(
 
     # 5. Extraer info del usuario del JWT
     user_id = UUID(current_user["idEmpleado"])
-    user_roles = current_user.get("roles", [])
+    user_roles = current_user.get("cargos_nombres", [])
 
     # 6. Validar transición con la Máquina de Estados (TaskStateMachine)
     try:
