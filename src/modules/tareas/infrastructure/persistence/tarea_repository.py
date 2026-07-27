@@ -186,10 +186,20 @@ class TareaRepositoryAdapter(TareaRepository):
                 id_rol = getattr(row, "idRolResponsable", None) or getattr(row, "idrolresponsable", None)
                 rol_nombre = getattr(row, "rolNombre", None) or getattr(row, "rolnombre", None) or getattr(row, "descripcion_rol", None) or getattr(row, "descripcionrol", None)
                 
+                rol_nombre_str = str(rol_nombre) if rol_nombre is not None else ""
+                rol_nombre_str_lower = rol_nombre_str.lower()
+                
+                if any(x in rol_nombre_str_lower for x in ["líder", "responsable", "lider"]):
+                    normalized_rol = "Responsable"
+                elif any(x in rol_nombre_str_lower for x in ["colaborador", "apoyo"]):
+                    normalized_rol = "Colaborador"
+                else:
+                    normalized_rol = "Colaborador"
+                
                 results.append({
                     "idResponsable": id_emp,
                     "idRolResponsable": id_rol,
-                    "rolNombre": rol_nombre,
+                    "rolNombre": normalized_rol,
                     "responsable": {
                         "idEmpleado": id_emp,
                         "nombre": nombre,
