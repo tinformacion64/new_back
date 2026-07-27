@@ -3,6 +3,15 @@ Configuración de la aplicación.
 Carga variables de entorno y define configuraciones por defecto.
 """
 import os
+from dotenv import load_dotenv
+
+# Cargar .env de forma robusta desde la raíz del proyecto
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+parent_root = os.path.dirname(project_root)
+dotenv_path = os.path.join(parent_root, ".env")
+load_dotenv(dotenv_path)
+
 from pydantic_settings import BaseSettings
 
 

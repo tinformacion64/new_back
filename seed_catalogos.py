@@ -4,14 +4,20 @@ Inserta de forma segura los Estados de Tarea y Cargos iniciales del sistema.
 """
 import sys
 import os
+from dotenv import load_dotenv
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
+# Cargar .env de forma robusta desde la raíz del proyecto
+root_dir = os.path.dirname(os.path.abspath(__file__))
+dotenv_path = os.path.join(root_dir, ".env")
+load_dotenv(dotenv_path)
+
 # Asegurar que 'src' esté en el sys.path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.join(root_dir, "src"))
 
 from shared.infrastructure.database.connection import DatabaseConnection
 from modules.catalogos.infrastructure.persistence import (
