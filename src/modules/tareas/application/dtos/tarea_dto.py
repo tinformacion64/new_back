@@ -37,12 +37,23 @@ class TareaCreateRequest(BaseModel):
         return value.strip()
 
 
-class ResponsableResponse(BaseModel):
-    """DTO de respuesta para un responsable."""
-    idEmpleado: UUID
-    nombre: str
+class ResponsableInfo(BaseModel):
+    """DTO interno con datos básicos del empleado responsable."""
+    idEmpleado: UUID = Field(..., alias="idEmpleado", serialization_alias="idEmpleado")
+    nombre: str = Field(..., alias="nombre", serialization_alias="nombre")
+    email: str = Field(..., alias="email", serialization_alias="email")
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
+class ResponsableResponse(BaseModel):
+    """DTO de respuesta para un responsable asignado a una tarea, incluyendo su rol."""
+    idResponsable: UUID = Field(..., alias="idResponsable", serialization_alias="idResponsable")
+    idRolResponsable: UUID = Field(..., alias="idRolResponsable", serialization_alias="idRolResponsable")
+    rolNombre: str = Field(..., alias="rolNombre", serialization_alias="rolNombre")
+    responsable: ResponsableInfo = Field(..., alias="responsable", serialization_alias="responsable")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class EvidenciaResponse(BaseModel):
