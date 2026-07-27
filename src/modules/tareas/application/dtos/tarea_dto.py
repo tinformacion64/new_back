@@ -41,6 +41,9 @@ class ResponsableInfo(BaseModel):
     """DTO interno con datos básicos del empleado responsable."""
     idEmpleado: UUID
     nombre: str
+    email: str
+    idArea: UUID
+    activo: bool
 
     model_config = ConfigDict(from_attributes=True)
 

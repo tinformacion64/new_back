@@ -90,6 +90,9 @@ def _to_response(tarea: Tarea, estado_tarea_repository: Any, repository: TareaRe
                 responsable=ResponsableInfo(
                     idEmpleado=r["responsable"]["idEmpleado"],
                     nombre=r["responsable"]["nombre"],
+                    email=r["responsable"]["email"],
+                    idArea=r["responsable"]["idArea"],
+                    activo=r["responsable"]["activo"],
                 )
             )
             for r in responsables
