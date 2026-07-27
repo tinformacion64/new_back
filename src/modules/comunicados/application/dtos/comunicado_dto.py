@@ -13,6 +13,12 @@ class DestinatarioIn(BaseModel):
     idRolDestinatario: UUID = Field(..., description="UUID del rol de destinatario")
 
 
+class ArchivoCreateDTO(BaseModel):
+    """DTO para crear un archivo vinculado con urlArchivo y nombreOriginal."""
+    urlArchivo: str = Field(..., description="URL del archivo subido a Cloudinary")
+    nombreOriginal: str = Field(..., description="Nombre original del archivo")
+
+
 class ComunicadoCreateRequest(BaseModel):
     """
     Payload de entrada para la creación de un Comunicado.
@@ -29,7 +35,7 @@ class ComunicadoCreateRequest(BaseModel):
     destinatarios: List[DestinatarioIn] = Field(
         ..., min_items=1, description="Lista de destinatarios asignados"
     )
-    archivoUrl: Optional[str] = Field(None, max_length=500, description="URL opcional del documento adjunto")
+    archivos: Optional[List[ArchivoCreateDTO]] = Field(default=None, description="Lista de archivos subidos para el comunicado")
 
     @field_validator("folioDoi", "numComunicado", "tema")
     @classmethod

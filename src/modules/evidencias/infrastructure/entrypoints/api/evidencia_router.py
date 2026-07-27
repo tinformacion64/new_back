@@ -76,9 +76,8 @@ async def create_evidencia(
             idTarea=request.idTarea,
             doi=request.doi,
             descripcion=request.descripcion,
-            urlArchivo=request.urlArchivo,
-            nombreOriginal=request.nombreOriginal,
             idElaborador=idElaborador,
+            archivos=[a.model_dump() for a in request.archivos] if request.archivos is not None else None,
         )
         return _to_response(evidencia, id_tarea=request.idTarea)
     except (BusinessRuleViolationError, ValueError) as e:

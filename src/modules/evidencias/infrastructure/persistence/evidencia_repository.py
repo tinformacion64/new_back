@@ -75,45 +75,74 @@ class EvidenciaRepositoryAdapter(EvidenciaRepository):
         )
 
     def add_with_tarea(self, evidencia: Evidencia, id_tarea: UUID) -> Evidencia:
+        """Mantiene compatibilidad redirigiendo a la inserción de múltiples archivos."""
+        archivos = [{"urlArchivo": evidencia.urlArchivo, "nombreOriginal": evidencia.nombreOriginal}]
+        results = self.add_with_tarea_and_files(
+            doi=evidencia.doi,
+            descripcion=evidencia.descripcion,
+            id_elaborador=evidencia.idElaborador,
+            id_tarea=id_tarea,
+            archivos=archivos
+        )
+        return results[0]
+
+    def add_with_tarea_and_files(
+        self,
+        doi: str,
+        descripcion: str,
+        id_elaborador: UUID,
+        id_tarea: UUID,
+        archivos: Optional[List[Dict[str, str]]] = None,
+    ) -> List[Evidencia]:
         """
-        Inserta la evidencia en ARCHIVO_EVIDENCIA y la relación en TAREA_EVIDENCIA
+        Inserta las evidencias en ARCHIVO_EVIDENCIA y sus relaciones en TAREA_EVIDENCIA
         en una sola transacción ACID.
         """
         with self._get_session() as session:
             try:
                 from datetime import datetime, timezone
-                stmt = insert(self.table).values(
-                    idArchivoEvidencia=evidencia.id,
-                    doi=evidencia.doi,
-                    descripcion=evidencia.descripcion,
-                    urlArchivo=evidencia.urlArchivo,
-                    nombreOriginal=evidencia.nombreOriginal,
-                    idElaborador=evidencia.idElaborador,
-                    fechaRegistro=datetime.now(timezone.utc),
-                ).returning(
-                    self.table.c.idArchivoEvidencia,
-                    self.table.c.doi,
-                    self.table.c.descripcion,
-                    self.table.c.urlArchivo,
-                    self.table.c.nombreOriginal,
-                    self.table.c.idElaborador,
-                    self.table.c.fechaRegistro,
-                )
-                result = session.execute(stmt)
-                row = result.fetchone()
-
-                # Insertar en la tabla puente TAREA_EVIDENCIA
-                session.execute(
-                    insert(self.tarea_evidencia_table).values(
-                        idTarea=id_tarea,
-                        idArchivoEvidencia=row.idArchivoEvidencia,
+                import uuid
+                
+                results = []
+                files_list = archivos or [{"urlArchivo": "", "nombreOriginal": "evidencia.pdf"}]
+                
+                for idx, file_info in enumerate(files_list):
+                    file_id = uuid.uuid4()
+                    file_doi = doi if idx == 0 else f"{doi}_{idx}"
+                    
+                    stmt = insert(self.table).values(
+                        idArchivoEvidencia=file_id,
+                        doi=file_doi,
+                        descripcion=descripcion,
+                        urlArchivo=file_info["urlArchivo"],
+                        nombreOriginal=file_info["nombreOriginal"],
+                        idElaborador=id_elaborador,
+                        fechaRegistro=datetime.now(timezone.utc),
+                    ).returning(
+                        self.table.c.idArchivoEvidencia,
+                        self.table.c.doi,
+                        self.table.c.descripcion,
+                        self.table.c.urlArchivo,
+                        self.table.c.nombreOriginal,
+                        self.table.c.idElaborador,
+                        self.table.c.fechaRegistro,
                     )
-                )
-
+                    result = session.execute(stmt)
+                    row = result.fetchone()
+                    
+                    session.execute(
+                        insert(self.tarea_evidencia_table).values(
+                            idTarea=id_tarea,
+                            idArchivoEvidencia=row.idArchivoEvidencia,
+                        )
+                    )
+                    
+                    results.append(self._row_to_evidencia(row))
+                
                 if self._session is not None:
                     session.commit()
-
-                return self._row_to_evidencia(row)
+                
+                return results
             except Exception:
                 session.rollback()
                 raise

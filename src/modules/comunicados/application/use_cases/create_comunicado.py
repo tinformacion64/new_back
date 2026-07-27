@@ -47,7 +47,7 @@ class CreateComunicadoUseCase:
         idMedioRecepcion: UUID,
         idEmpleadoRegistro: UUID,
         destinatarios: List[Dict[str, Any]],
-        archivoUrl: Optional[str] = None,
+        archivos: Optional[List[Dict[str, str]]] = None,
     ) -> Comunicado:
         # folioDoi único (verificación explícita de negocio, además de la
         # constraint UNIQUE de la base de datos)
@@ -101,6 +101,11 @@ class CreateComunicadoUseCase:
                         f"El rol de destinatario {rol_id} no existe"
                     )
 
+        # Resolver url del primer archivo para fallback
+        first_url = None
+        if archivos and len(archivos) > 0:
+            first_url = archivos[0]["urlArchivo"]
+
         # Crear la entidad (valida fechaRecepcion >= fechaEmision, longitudes, etc.)
         comunicado = Comunicado(
             folioDoi=folioDoi,
@@ -112,8 +117,8 @@ class CreateComunicadoUseCase:
             idTipoComunicado=idTipoComunicado,
             idMedioRecepcion=idMedioRecepcion,
             idEmpleadoRegistro=idEmpleadoRegistro,
-            archivoUrl=archivoUrl,
+            archivoUrl=first_url,
         )
 
         # Insertar comunicado + destinatarios en una sola transacción
-        return self._repository.add_with_destinatarios(comunicado, destinatarios)
+        return self._repository.add_with_destinatarios(comunicado, destinatarios, archivos=archivos)

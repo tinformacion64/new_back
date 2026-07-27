@@ -7,6 +7,12 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
+class ArchivoCreateDTO(BaseModel):
+    """DTO para crear un archivo vinculado con urlArchivo y nombreOriginal."""
+    urlArchivo: str = Field(..., description="URL del archivo subido a Cloudinary")
+    nombreOriginal: str = Field(..., description="Nombre original del archivo")
+
+
 class EvidenciaCreateRequest(BaseModel):
     """
     Payload de entrada para registrar una Evidencia.
@@ -15,10 +21,9 @@ class EvidenciaCreateRequest(BaseModel):
     idTarea: UUID = Field(..., description="UUID de la tarea a la que pertenece la evidencia")
     doi: str = Field(..., max_length=100, description="DOI único de la evidencia")
     descripcion: str = Field(..., description="Descripción detallada de la evidencia")
-    urlArchivo: str = Field(..., max_length=500, description="URL o ruta del archivo de evidencia")
-    nombreOriginal: str = Field(..., max_length=255, description="Nombre original del archivo adjunto")
+    archivos: Optional[List[ArchivoCreateDTO]] = Field(default=None, description="Lista de archivos subidos para la evidencia")
 
-    @field_validator("doi", "descripcion", "urlArchivo", "nombreOriginal")
+    @field_validator("doi", "descripcion")
     @classmethod
     def not_empty(cls, value: str) -> str:
         if not value or not value.strip():

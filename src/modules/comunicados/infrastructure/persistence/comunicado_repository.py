@@ -88,7 +88,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
         )
 
     def add_with_destinatarios(
-        self, comunicado: Comunicado, destinatarios: List[Dict[str, Any]]
+        self, comunicado: Comunicado, destinatarios: List[Dict[str, Any]], archivos: Optional[List[Dict[str, str]]] = None
     ) -> Comunicado:
         """
         Inserta el comunicado y sus destinatarios en una sola transacción
@@ -134,7 +134,18 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                         )
                     )
 
-                if comunicado.archivoUrl:
+                if archivos:
+                    import uuid
+                    for file_info in archivos:
+                        session.execute(
+                            insert(self.archivo_table).values(
+                                idArchivo=uuid.uuid4(),
+                                idComunicado=row.idComunicado,
+                                urlArchivo=file_info["urlArchivo"],
+                                nombreOriginal=file_info["nombreOriginal"]
+                            )
+                        )
+                elif comunicado.archivoUrl:
                     import uuid
                     session.execute(
                         insert(self.archivo_table).values(

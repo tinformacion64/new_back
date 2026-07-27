@@ -2,7 +2,7 @@
 Caso de uso para registrar evidencias y actualizar el estado de la tarea a 'entregada'.
 """
 from uuid import UUID
-from typing import Any
+from typing import Any, List, Dict, Optional
 
 from ...domain.entities import Evidencia
 from ...domain.ports import EvidenciaRepository
@@ -31,9 +31,8 @@ class CreateEvidenciaUseCase:
         idTarea: UUID,
         doi: str,
         descripcion: str,
-        urlArchivo: str,
-        nombreOriginal: str,
         idElaborador: UUID,
+        archivos: Optional[List[Dict[str, str]]] = None,
     ) -> Evidencia:
         # 1. Validar que la tarea padre existe
         tarea = self._tarea_repository.get_by_id(idTarea)
@@ -44,23 +43,20 @@ class CreateEvidenciaUseCase:
         if self._repository.get_by_doi(doi) is not None:
             raise BusinessRuleViolationError(f"Ya existe una evidencia con doi '{doi}'")
 
-        # 3. Crear entidad Evidencia
-        evidencia = Evidencia(
+        # 3. Insertar evidencia y vinculación transaccionalmente
+        saved_evidencias = self._repository.add_with_tarea_and_files(
             doi=doi,
             descripcion=descripcion,
-            urlArchivo=urlArchivo,
-            nombreOriginal=nombreOriginal,
-            idElaborador=idElaborador,
+            id_elaborador=idElaborador,
+            id_tarea=idTarea,
+            archivos=archivos,
         )
 
-        # 4. Insertar evidencia y vinculación transaccionalmente
-        saved_evidencia = self._repository.add_with_tarea(evidencia, idTarea)
-
-        # 5. TRIGGER LÓGICO: Obtener el UUID del estado "entregada" y actualizar la tarea padre
+        # 4. TRIGGER LÓGICO: Obtener el UUID del estado "entregada" y actualizar la tarea padre
         estado_entregada = self._estado_tarea_repository.get_by_nombre("entregada")
         if estado_entregada is None:
             estado_entregada = find_estado_by_nombre(self._estado_tarea_repository, "ENTREGADA")
 
         self._tarea_repository.update_estado(idTarea, estado_entregada.id)
 
-        return saved_evidencia
+        return saved_evidencias[0]

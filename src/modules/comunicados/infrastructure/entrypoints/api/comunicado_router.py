@@ -130,7 +130,7 @@ async def create_comunicado(
             idMedioRecepcion=request.idMedioRecepcion,
             idEmpleadoRegistro=idEmpleadoRegistro,
             destinatarios=[d.model_dump() for d in request.destinatarios],
-            archivoUrl=request.archivoUrl,
+            archivos=[a.model_dump() for a in request.archivos] if request.archivos is not None else None,
         )
         return _to_response(comunicado)
     except (BusinessRuleViolationError, ValueError) as e:
