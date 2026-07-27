@@ -289,6 +289,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
             return com
 
     def get_all(self) -> List[Comunicado]:
+        """Lista todos los comunicados cargando ansiosamente sus archivos adjuntos para la bandeja principal."""
         with self._get_session() as session:
             from modules.personal.infrastructure.persistence import EmpleadoRepositoryAdapter
             from modules.catalogos.infrastructure.persistence import AreaRepositoryAdapter
