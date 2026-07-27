@@ -46,6 +46,7 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "https://*.vercel.app",  # Next.js en Vercel
         "https://*.netlify.app",  # Next.js en Netlify
+        "https://sgc-2-i-frontend.vercel.app/",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
