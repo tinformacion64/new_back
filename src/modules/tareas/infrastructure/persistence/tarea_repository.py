@@ -156,49 +156,23 @@ class TareaRepositoryAdapter(TareaRepository):
     def get_responsables_detallados(self, id_tarea: UUID) -> List[Dict[str, Any]]:
         with self._get_session() as session:
             from modules.personal.infrastructure.persistence import EmpleadoRepositoryAdapter
-            from modules.catalogos.infrastructure.persistence import RolResponsableRepositoryAdapter
             emp_table = EmpleadoRepositoryAdapter().table
-            rol_table = RolResponsableRepositoryAdapter().table
-            
             stmt = select(
                 self.responsable_table.c.idResponsable.label("idEmpleado"),
-                emp_table.c.nombre.label("nombre"),
-                emp_table.c.email.label("email"),
-                emp_table.c.idArea.label("idArea"),
-                emp_table.c.activo.label("activo"),
-                self.responsable_table.c.idRolResponsable.label("idRolResponsable"),
-                rol_table.c.descripcion_rol.label("rolNombre")
+                emp_table.c.nombre.label("nombre")
             ).select_from(
                 self.responsable_table.join(emp_table, self.responsable_table.c.idResponsable == emp_table.c.idEmpleado)
-                .join(rol_table, self.responsable_table.c.idRolResponsable == rol_table.c.idRolResponsable)
             ).where(
                 self.responsable_table.c.idTarea == id_tarea
             )
             rows = session.execute(stmt).fetchall()
-            
-            results = []
-            for row in rows:
-                id_emp = getattr(row, "idEmpleado", None) or getattr(row, "idempleado", None)
-                nombre = getattr(row, "nombre", None)
-                email = getattr(row, "email", None)
-                id_area = getattr(row, "idArea", None) or getattr(row, "idarea", None)
-                activo = getattr(row, "activo", None)
-                id_rol = getattr(row, "idRolResponsable", None) or getattr(row, "idrolresponsable", None)
-                rol_nombre = getattr(row, "rolNombre", None) or getattr(row, "rolnombre", None) or getattr(row, "descripcion_rol", None) or getattr(row, "descripcionrol", None)
-                
-                results.append({
-                    "idResponsable": id_emp,
-                    "idRolResponsable": id_rol,
-                    "rolNombre": rol_nombre,
-                    "responsable": {
-                        "idEmpleado": id_emp,
-                        "nombre": nombre,
-                        "email": email,
-                        "idArea": id_area,
-                        "activo": bool(activo) if activo is not None else True
-                    }
-                })
-            return results
+            return [
+                {
+                    "idEmpleado": row.idEmpleado,
+                    "nombre": row.nombre
+                }
+                for row in rows
+            ]
 
     def get_evidencias(self, id_tarea: UUID) -> List[Dict[str, Any]]:
         with self._get_session() as session:

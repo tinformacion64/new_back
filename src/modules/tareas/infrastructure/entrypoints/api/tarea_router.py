@@ -16,7 +16,6 @@ from ....application.dtos import (
     TareaCreateRequest,
     TareaResponse,
     ResponsableResponse,
-    ResponsableInfo,
     EvidenciaResponse,
 )
 from ....application.use_cases import CreateTareaUseCase, TransicionEstadoTareaUseCase
@@ -84,16 +83,8 @@ def _to_response(tarea: Tarea, estado_tarea_repository: Any, repository: TareaRe
         estado=_compute_estado_nombre(estado_nombre, tarea.fechaEntrega),
         responsables=[
             ResponsableResponse(
-                idResponsable=r["idResponsable"],
-                idRolResponsable=r["idRolResponsable"],
-                rolNombre=r["rolNombre"],
-                responsable=ResponsableInfo(
-                    idEmpleado=r["responsable"]["idEmpleado"],
-                    nombre=r["responsable"]["nombre"],
-                    email=r["responsable"]["email"],
-                    idArea=r["responsable"]["idArea"],
-                    activo=r["responsable"]["activo"],
-                )
+                idEmpleado=r["idEmpleado"],
+                nombre=r["nombre"]
             )
             for r in responsables
         ],
