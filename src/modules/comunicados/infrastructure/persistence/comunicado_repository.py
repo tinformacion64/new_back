@@ -134,8 +134,35 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                         )
                     )
 
+                if archivos:
+                    import uuid
+                    for file_info in archivos:
+                        session.execute(
+                            insert(self.archivo_table).values(
+                                idArchivo=uuid.uuid4(),
+                                idComunicado=row.idComunicado,
+                                urlArchivo=file_info["urlArchivo"],
+                                nombreOriginal=file_info["nombreOriginal"]
+                            )
+                        )
+                elif comunicado.archivoUrl:
+                    import uuid
+                    session.execute(
+                        insert(self.archivo_table).values(
+                            idArchivo=uuid.uuid4(),
+                            idComunicado=row.idComunicado,
+                            urlArchivo=comunicado.archivoUrl,
+                            nombreOriginal="documento_adjunto.pdf"
+                        )
+                    )
+
                 if self._session is not None:
                     session.commit()
+
+                # Popular archivos para el retorno de la entidad
+                ret_archivos = archivos if archivos else []
+                if not ret_archivos and comunicado.archivoUrl:
+                    ret_archivos = [{"urlArchivo": comunicado.archivoUrl, "nombreOriginal": "documento_adjunto.pdf"}]
 
                 return Comunicado(
                     id=row.idComunicado,
@@ -150,13 +177,22 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     idMedioRecepcion=row.idMedioRecepcion,
                     idEmpleadoRegistro=row.idEmpleadoRegistro,
                     archivoUrl=comunicado.archivoUrl,
+                    archivos=ret_archivos
                 )
             except Exception:
                 session.rollback()
                 raise
 
     def _get_archivos(self, session, id_comunicado: UUID) -> List[Dict[str, str]]:
-        return []
+        stmt = select(
+            self.archivo_table.c.urlArchivo,
+            self.archivo_table.c.nombreOriginal
+        ).where(self.archivo_table.c.idComunicado == id_comunicado)
+        rows = session.execute(stmt).fetchall()
+        return [
+            {"urlArchivo": row.urlArchivo, "nombreOriginal": row.nombreOriginal}
+            for row in rows
+        ]
 
     def get_by_id(self, id: UUID) -> Optional[Comunicado]:
         with self._get_session() as session:
@@ -165,6 +201,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
             
             emp_table = EmpleadoRepositoryAdapter().table
             area_table = AreaRepositoryAdapter().table
+            archivo_table = self.archivo_table
             
             emisor_alias = emp_table.alias("emisor")
             registro_alias = emp_table.alias("registro")
@@ -174,35 +211,47 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     self.table,
                     area_table.c.nombre.label("area_emisora_nombre"),
                     registro_alias.c.nombre.label("empleado_registro_nombre"),
+                    archivo_table.c.urlArchivo.label("archivo_url"),
+                    archivo_table.c.nombreOriginal.label("archivo_nombre_original"),
                 )
                 .select_from(
                     self.table
                     .join(emisor_alias, self.table.c.idEmisor == emisor_alias.c.idEmpleado)
                     .join(area_table, emisor_alias.c.idArea == area_table.c.idArea)
                     .join(registro_alias, self.table.c.idEmpleadoRegistro == registro_alias.c.idEmpleado)
+                    .outerjoin(archivo_table, self.table.c.idComunicado == archivo_table.c.idComunicado)
                 )
                 .where(self.table.c.idComunicado == id)
             )
-            row = session.execute(stmt).fetchone()
-            if row is None:
+            rows = session.execute(stmt).fetchall()
+            if not rows:
                 return None
+            
+            first_row = rows[0]
             com = Comunicado(
-                id=row.idComunicado,
-                folioDoi=row.folioDoi,
-                numComunicado=row.numComunicado,
-                tema=row.tema,
-                fechaEmision=row.fechaEmision,
-                fechaRecepcion=row.fechaRecepcion,
-                fechaRegistro=row.fechaRegistro,
-                idEmisor=row.idEmisor,
-                idTipoComunicado=row.idTipoComunicado,
-                idMedioRecepcion=row.idMedioRecepcion,
-                idEmpleadoRegistro=row.idEmpleadoRegistro,
-                areaEmisoraNombre=row.area_emisora_nombre,
-                empleadoRegistroNombre=row.empleado_registro_nombre,
-                archivoUrl=None,
+                id=first_row.idComunicado,
+                folioDoi=first_row.folioDoi,
+                numComunicado=first_row.numComunicado,
+                tema=first_row.tema,
+                fechaEmision=first_row.fechaEmision,
+                fechaRecepcion=first_row.fechaRecepcion,
+                fechaRegistro=first_row.fechaRegistro,
+                idEmisor=first_row.idEmisor,
+                idTipoComunicado=first_row.idTipoComunicado,
+                idMedioRecepcion=first_row.idMedioRecepcion,
+                idEmpleadoRegistro=first_row.idEmpleadoRegistro,
+                areaEmisoraNombre=first_row.area_emisora_nombre,
+                empleadoRegistroNombre=first_row.empleado_registro_nombre,
+                archivoUrl=first_row.archivo_url,
+                archivos=[]
             )
-            com.archivos = self._get_archivos(session, com.id)
+            
+            for row in rows:
+                if row.archivo_url:
+                    com.archivos.append({
+                        "urlArchivo": row.archivo_url,
+                        "nombreOriginal": row.archivo_nombre_original
+                    })
             return com
 
     def get_by_folio_doi(self, folio_doi: str) -> Optional[Comunicado]:
@@ -212,6 +261,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
             
             emp_table = EmpleadoRepositoryAdapter().table
             area_table = AreaRepositoryAdapter().table
+            archivo_table = self.archivo_table
             
             emisor_alias = emp_table.alias("emisor")
             registro_alias = emp_table.alias("registro")
@@ -221,35 +271,46 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     self.table,
                     area_table.c.nombre.label("area_emisora_nombre"),
                     registro_alias.c.nombre.label("empleado_registro_nombre"),
+                    archivo_table.c.urlArchivo.label("archivo_url"),
+                    archivo_table.c.nombreOriginal.label("archivo_nombre_original"),
                 )
                 .select_from(
                     self.table
                     .join(emisor_alias, self.table.c.idEmisor == emisor_alias.c.idEmpleado)
                     .join(area_table, emisor_alias.c.idArea == area_table.c.idArea)
                     .join(registro_alias, self.table.c.idEmpleadoRegistro == registro_alias.c.idEmpleado)
+                    .outerjoin(archivo_table, self.table.c.idComunicado == archivo_table.c.idComunicado)
                 )
                 .where(self.table.c.folioDoi == folio_doi)
             )
-            row = session.execute(stmt).fetchone()
-            if row is None:
+            rows = session.execute(stmt).fetchall()
+            if not rows:
                 return None
+            
+            first_row = rows[0]
             com = Comunicado(
-                id=row.idComunicado,
-                folioDoi=row.folioDoi,
-                numComunicado=row.numComunicado,
-                tema=row.tema,
-                fechaEmision=row.fechaEmision,
-                fechaRecepcion=row.fechaRecepcion,
-                fechaRegistro=row.fechaRegistro,
-                idEmisor=row.idEmisor,
-                idTipoComunicado=row.idTipoComunicado,
-                idMedioRecepcion=row.idMedioRecepcion,
-                idEmpleadoRegistro=row.idEmpleadoRegistro,
-                areaEmisoraNombre=row.area_emisora_nombre,
-                empleadoRegistroNombre=row.empleado_registro_nombre,
-                archivoUrl=None,
+                id=first_row.idComunicado,
+                folioDoi=first_row.folioDoi,
+                numComunicado=first_row.numComunicado,
+                tema=first_row.tema,
+                fechaEmision=first_row.fechaEmision,
+                fechaRecepcion=first_row.fechaRecepcion,
+                fechaRegistro=first_row.fechaRegistro,
+                idEmisor=first_row.idEmisor,
+                idTipoComunicado=first_row.idTipoComunicado,
+                idMedioRecepcion=first_row.idMedioRecepcion,
+                idEmpleadoRegistro=first_row.idEmpleadoRegistro,
+                areaEmisoraNombre=first_row.area_emisora_nombre,
+                empleadoRegistroNombre=first_row.empleado_registro_nombre,
+                archivoUrl=first_row.archivo_url,
+                archivos=[]
             )
-            com.archivos = self._get_archivos(session, com.id)
+            for row in rows:
+                if row.archivo_url:
+                    com.archivos.append({
+                        "urlArchivo": row.archivo_url,
+                        "nombreOriginal": row.archivo_nombre_original
+                    })
             return com
 
     def get_all(self) -> List[Comunicado]:
@@ -260,6 +321,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
             
             emp_table = EmpleadoRepositoryAdapter().table
             area_table = AreaRepositoryAdapter().table
+            archivo_table = self.archivo_table
             
             emisor_alias = emp_table.alias("emisor")
             registro_alias = emp_table.alias("registro")
@@ -269,37 +331,46 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     self.table,
                     area_table.c.nombre.label("area_emisora_nombre"),
                     registro_alias.c.nombre.label("empleado_registro_nombre"),
+                    archivo_table.c.urlArchivo.label("archivo_url"),
+                    archivo_table.c.nombreOriginal.label("archivo_nombre_original"),
                 )
                 .select_from(
                     self.table
                     .join(emisor_alias, self.table.c.idEmisor == emisor_alias.c.idEmpleado)
                     .join(area_table, emisor_alias.c.idArea == area_table.c.idArea)
                     .join(registro_alias, self.table.c.idEmpleadoRegistro == registro_alias.c.idEmpleado)
+                    .outerjoin(archivo_table, self.table.c.idComunicado == archivo_table.c.idComunicado)
                 )
             )
             rows = session.execute(stmt).fetchall()
             
-            results = []
+            comunicados_map = {}
             for row in rows:
-                com = Comunicado(
-                    id=row.idComunicado,
-                    folioDoi=row.folioDoi,
-                    numComunicado=row.numComunicado,
-                    tema=row.tema,
-                    fechaEmision=row.fechaEmision,
-                    fechaRecepcion=row.fechaRecepcion,
-                    fechaRegistro=row.fechaRegistro,
-                    idEmisor=row.idEmisor,
-                    idTipoComunicado=row.idTipoComunicado,
-                    idMedioRecepcion=row.idMedioRecepcion,
-                    idEmpleadoRegistro=row.idEmpleadoRegistro,
-                    areaEmisoraNombre=row.area_emisora_nombre,
-                    empleadoRegistroNombre=row.empleado_registro_nombre,
-                    archivoUrl=None,
-                )
-                com.archivos = self._get_archivos(session, com.id)
-                results.append(com)
-            return results
+                com_id = row.idComunicado
+                if com_id not in comunicados_map:
+                    comunicados_map[com_id] = Comunicado(
+                        id=row.idComunicado,
+                        folioDoi=row.folioDoi,
+                        numComunicado=row.numComunicado,
+                        tema=row.tema,
+                        fechaEmision=row.fechaEmision,
+                        fechaRecepcion=row.fechaRecepcion,
+                        fechaRegistro=row.fechaRegistro,
+                        idEmisor=row.idEmisor,
+                        idTipoComunicado=row.idTipoComunicado,
+                        idMedioRecepcion=row.idMedioRecepcion,
+                        idEmpleadoRegistro=row.idEmpleadoRegistro,
+                        areaEmisoraNombre=row.area_emisora_nombre,
+                        empleadoRegistroNombre=row.empleado_registro_nombre,
+                        archivoUrl=row.archivo_url,
+                        archivos=[]
+                    )
+                if row.archivo_url:
+                    comunicados_map[com_id].archivos.append({
+                        "urlArchivo": row.archivo_url,
+                        "nombreOriginal": row.archivo_nombre_original
+                    })
+            return list(comunicados_map.values())
 
     def get_destinatarios(self, id_comunicado: UUID) -> List[Dict[str, Any]]:
         with self._get_session() as session:
