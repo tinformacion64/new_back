@@ -156,23 +156,40 @@ class TareaRepositoryAdapter(TareaRepository):
     def get_responsables_detallados(self, id_tarea: UUID) -> List[Dict[str, Any]]:
         with self._get_session() as session:
             from modules.personal.infrastructure.persistence import EmpleadoRepositoryAdapter
+            from modules.catalogos.infrastructure.persistence import RolResponsableRepositoryAdapter
             emp_table = EmpleadoRepositoryAdapter().table
+            rol_table = RolResponsableRepositoryAdapter().table
+            
             stmt = select(
                 self.responsable_table.c.idResponsable.label("idEmpleado"),
-                emp_table.c.nombre.label("nombre")
+                emp_table.c.nombre.label("nombre"),
+                self.responsable_table.c.idRolResponsable.label("idRolResponsable"),
+                rol_table.c.descripcion_rol.label("rolNombre")
             ).select_from(
                 self.responsable_table.join(emp_table, self.responsable_table.c.idResponsable == emp_table.c.idEmpleado)
+                .join(rol_table, self.responsable_table.c.idRolResponsable == rol_table.c.idRolResponsable)
             ).where(
                 self.responsable_table.c.idTarea == id_tarea
             )
             rows = session.execute(stmt).fetchall()
-            return [
-                {
-                    "idEmpleado": row.idEmpleado,
-                    "nombre": row.nombre
-                }
-                for row in rows
-            ]
+            
+            results = []
+            for row in rows:
+                id_emp = getattr(row, "idEmpleado", None) or getattr(row, "idempleado", None)
+                nombre = getattr(row, "nombre", None)
+                id_rol = getattr(row, "idRolResponsable", None) or getattr(row, "idrolresponsable", None)
+                rol_nombre = getattr(row, "rolNombre", None) or getattr(row, "rolnombre", None) or getattr(row, "descripcion_rol", None) or getattr(row, "descripcionrol", None)
+                
+                results.append({
+                    "idResponsable": id_emp,
+                    "idRolResponsable": id_rol,
+                    "rolNombre": rol_nombre,
+                    "responsable": {
+                        "idEmpleado": id_emp,
+                        "nombre": nombre
+                    }
+                })
+            return results
 
     def get_evidencias(self, id_tarea: UUID) -> List[Dict[str, Any]]:
         with self._get_session() as session:

@@ -37,10 +37,20 @@ class TareaCreateRequest(BaseModel):
         return value.strip()
 
 
-class ResponsableResponse(BaseModel):
-    """DTO de respuesta para un responsable."""
+class ResponsableInfo(BaseModel):
+    """DTO interno con datos básicos del empleado responsable."""
     idEmpleado: UUID
     nombre: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ResponsableResponse(BaseModel):
+    """DTO de respuesta para un responsable asignado a una tarea, incluyendo su rol."""
+    idResponsable: UUID
+    idRolResponsable: UUID
+    rolNombre: str
+    responsable: ResponsableInfo
 
     model_config = ConfigDict(from_attributes=True)
 
