@@ -134,28 +134,6 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                         )
                     )
 
-                if archivos:
-                    import uuid
-                    for file_info in archivos:
-                        session.execute(
-                            insert(self.archivo_table).values(
-                                idArchivo=uuid.uuid4(),
-                                idComunicado=row.idComunicado,
-                                urlArchivo=file_info["urlArchivo"],
-                                nombreOriginal=file_info["nombreOriginal"]
-                            )
-                        )
-                elif comunicado.archivoUrl:
-                    import uuid
-                    session.execute(
-                        insert(self.archivo_table).values(
-                            idArchivo=uuid.uuid4(),
-                            idComunicado=row.idComunicado,
-                            urlArchivo=comunicado.archivoUrl,
-                            nombreOriginal="documento_adjunto.pdf"
-                        )
-                    )
-
                 if self._session is not None:
                     session.commit()
 
