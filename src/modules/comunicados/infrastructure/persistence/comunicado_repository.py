@@ -178,15 +178,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                 raise
 
     def _get_archivos(self, session, id_comunicado: UUID) -> List[Dict[str, str]]:
-        stmt = select(
-            self.archivo_table.c.urlArchivo,
-            self.archivo_table.c.nombreOriginal
-        ).where(self.archivo_table.c.idComunicado == id_comunicado)
-        rows = session.execute(stmt).fetchall()
-        return [
-            {"urlArchivo": row.urlArchivo, "nombreOriginal": row.nombreOriginal}
-            for row in rows
-        ]
+        return []
 
     def get_by_id(self, id: UUID) -> Optional[Comunicado]:
         with self._get_session() as session:
@@ -195,7 +187,6 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
             
             emp_table = EmpleadoRepositoryAdapter().table
             area_table = AreaRepositoryAdapter().table
-            archivo_table = self.archivo_table
             
             emisor_alias = emp_table.alias("emisor")
             registro_alias = emp_table.alias("registro")
@@ -205,14 +196,12 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     self.table,
                     area_table.c.nombre.label("area_emisora_nombre"),
                     registro_alias.c.nombre.label("empleado_registro_nombre"),
-                    archivo_table.c.urlArchivo.label("archivo_url"),
                 )
                 .select_from(
                     self.table
                     .join(emisor_alias, self.table.c.idEmisor == emisor_alias.c.idEmpleado)
                     .join(area_table, emisor_alias.c.idArea == area_table.c.idArea)
                     .join(registro_alias, self.table.c.idEmpleadoRegistro == registro_alias.c.idEmpleado)
-                    .outerjoin(archivo_table, self.table.c.idComunicado == archivo_table.c.idComunicado)
                 )
                 .where(self.table.c.idComunicado == id)
             )
@@ -233,7 +222,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                 idEmpleadoRegistro=row.idEmpleadoRegistro,
                 areaEmisoraNombre=row.area_emisora_nombre,
                 empleadoRegistroNombre=row.empleado_registro_nombre,
-                archivoUrl=row.archivo_url,
+                archivoUrl=None,
             )
             com.archivos = self._get_archivos(session, com.id)
             return com
@@ -245,7 +234,6 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
             
             emp_table = EmpleadoRepositoryAdapter().table
             area_table = AreaRepositoryAdapter().table
-            archivo_table = self.archivo_table
             
             emisor_alias = emp_table.alias("emisor")
             registro_alias = emp_table.alias("registro")
@@ -255,14 +243,12 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     self.table,
                     area_table.c.nombre.label("area_emisora_nombre"),
                     registro_alias.c.nombre.label("empleado_registro_nombre"),
-                    archivo_table.c.urlArchivo.label("archivo_url"),
                 )
                 .select_from(
                     self.table
                     .join(emisor_alias, self.table.c.idEmisor == emisor_alias.c.idEmpleado)
                     .join(area_table, emisor_alias.c.idArea == area_table.c.idArea)
                     .join(registro_alias, self.table.c.idEmpleadoRegistro == registro_alias.c.idEmpleado)
-                    .outerjoin(archivo_table, self.table.c.idComunicado == archivo_table.c.idComunicado)
                 )
                 .where(self.table.c.folioDoi == folio_doi)
             )
@@ -283,20 +269,19 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                 idEmpleadoRegistro=row.idEmpleadoRegistro,
                 areaEmisoraNombre=row.area_emisora_nombre,
                 empleadoRegistroNombre=row.empleado_registro_nombre,
-                archivoUrl=row.archivo_url,
+                archivoUrl=None,
             )
             com.archivos = self._get_archivos(session, com.id)
             return com
 
     def get_all(self) -> List[Comunicado]:
-        """Lista todos los comunicados cargando ansiosamente sus archivos adjuntos para la bandeja principal."""
+        """Lista todos los comunicados de la bandeja principal."""
         with self._get_session() as session:
             from modules.personal.infrastructure.persistence import EmpleadoRepositoryAdapter
             from modules.catalogos.infrastructure.persistence import AreaRepositoryAdapter
             
             emp_table = EmpleadoRepositoryAdapter().table
             area_table = AreaRepositoryAdapter().table
-            archivo_table = self.archivo_table
             
             emisor_alias = emp_table.alias("emisor")
             registro_alias = emp_table.alias("registro")
@@ -306,14 +291,12 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     self.table,
                     area_table.c.nombre.label("area_emisora_nombre"),
                     registro_alias.c.nombre.label("empleado_registro_nombre"),
-                    archivo_table.c.urlArchivo.label("archivo_url"),
                 )
                 .select_from(
                     self.table
                     .join(emisor_alias, self.table.c.idEmisor == emisor_alias.c.idEmpleado)
                     .join(area_table, emisor_alias.c.idArea == area_table.c.idArea)
                     .join(registro_alias, self.table.c.idEmpleadoRegistro == registro_alias.c.idEmpleado)
-                    .outerjoin(archivo_table, self.table.c.idComunicado == archivo_table.c.idComunicado)
                 )
             )
             rows = session.execute(stmt).fetchall()
@@ -334,7 +317,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     idEmpleadoRegistro=row.idEmpleadoRegistro,
                     areaEmisoraNombre=row.area_emisora_nombre,
                     empleadoRegistroNombre=row.empleado_registro_nombre,
-                    archivoUrl=row.archivo_url,
+                    archivoUrl=None,
                 )
                 com.archivos = self._get_archivos(session, com.id)
                 results.append(com)
