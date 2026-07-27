@@ -3,7 +3,7 @@ Adaptador de persistencia para el repositorio de Evidencias.
 Usa SQLAlchemy Core con SQL crudo, respetando el esquema existente.
 """
 from uuid import UUID
-from typing import List, Optional
+from typing import List, Dict, Optional
 from contextlib import contextmanager
 
 from sqlalchemy import Table, Column, String, Text, DateTime, insert, select

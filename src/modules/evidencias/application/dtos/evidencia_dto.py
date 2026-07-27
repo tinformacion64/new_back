@@ -3,7 +3,7 @@ DTOs para la gestión de Evidencias (Fase 3 / Sección V SGC2I).
 """
 from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
