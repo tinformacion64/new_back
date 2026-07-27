@@ -164,6 +164,8 @@ class TareaRepositoryAdapter(TareaRepository):
                 self.responsable_table.c.idResponsable.label("idEmpleado"),
                 emp_table.c.nombre.label("nombre"),
                 emp_table.c.email.label("email"),
+                emp_table.c.idArea.label("idArea"),
+                emp_table.c.activo.label("activo"),
                 self.responsable_table.c.idRolResponsable.label("idRolResponsable"),
                 rol_table.c.descripcion_rol.label("rolNombre")
             ).select_from(
@@ -179,6 +181,8 @@ class TareaRepositoryAdapter(TareaRepository):
                 id_emp = getattr(row, "idEmpleado", None) or getattr(row, "idempleado", None)
                 nombre = getattr(row, "nombre", None)
                 email = getattr(row, "email", None)
+                id_area = getattr(row, "idArea", None) or getattr(row, "idarea", None)
+                activo = getattr(row, "activo", None)
                 id_rol = getattr(row, "idRolResponsable", None) or getattr(row, "idrolresponsable", None)
                 rol_nombre = getattr(row, "rolNombre", None) or getattr(row, "rolnombre", None) or getattr(row, "descripcion_rol", None) or getattr(row, "descripcionrol", None)
                 
@@ -189,7 +193,9 @@ class TareaRepositoryAdapter(TareaRepository):
                     "responsable": {
                         "idEmpleado": id_emp,
                         "nombre": nombre,
-                        "email": email
+                        "email": email,
+                        "idArea": id_area,
+                        "activo": bool(activo) if activo is not None else True
                     }
                 })
             return results

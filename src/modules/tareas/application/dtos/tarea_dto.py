@@ -42,6 +42,8 @@ class ResponsableInfo(BaseModel):
     idEmpleado: UUID = Field(..., alias="idEmpleado", serialization_alias="idEmpleado")
     nombre: str = Field(..., alias="nombre", serialization_alias="nombre")
     email: str = Field(..., alias="email", serialization_alias="email")
+    idArea: UUID = Field(..., alias="idArea", serialization_alias="idArea")
+    activo: bool = Field(..., alias="activo", serialization_alias="activo")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
