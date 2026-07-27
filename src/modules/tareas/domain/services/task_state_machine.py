@@ -2,7 +2,7 @@
 Máquina de Estados de Tarea (TaskStateMachine) con validación RBAC.
 """
 from uuid import UUID
-from typing import List, Optional
+from typing import List, Optional, Any
 from shared.domain.exceptions import BusinessRuleViolationError
 
 
@@ -19,12 +19,23 @@ class TaskStateMachine:
         user_roles: List[str],
         responsables: List[UUID],
         comunicado_creator_id: Optional[UUID] = None,
+        fecha_entrega: Optional[Any] = None,
     ) -> None:
         """
         Valida que la transición sea lógica y que el usuario tenga los permisos adecuados.
         """
+        from datetime import datetime, timezone
         curr = current_state_name.strip().upper().replace(" ", "_")
         target = target_state_name.strip().upper().replace(" ", "_")
+
+        # Evaluación de Vencimiento en Tiempo Real
+        if curr in ["ASIGNADA", "EN_PROCESO"] and fecha_entrega is not None:
+            entrega = fecha_entrega
+            if entrega.tzinfo is None:
+                entrega = entrega.replace(tzinfo=timezone.utc)
+            ahora = datetime.now(timezone.utc)
+            if entrega < ahora:
+                curr = "VENCIDA"
 
         # 1. Estados Terminales: REVISADA y CANCELADA son inmutables
         if curr in ["REVISADA", "CANCELADA"]:

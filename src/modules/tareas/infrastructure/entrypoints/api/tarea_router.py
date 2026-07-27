@@ -234,7 +234,8 @@ def _transicionar(
             user_id=user_id,
             user_roles=user_roles,
             responsables=responsables_ids,
-            comunicado_creator_id=comunicado_creator_id
+            comunicado_creator_id=comunicado_creator_id,
+            fecha_entrega=tarea.fechaEntrega,
         )
     except BusinessRuleViolationError as e:
         if "Solo los usuarios con rol" in str(e) or "Solo los responsables" in str(e) or "Solo el director" in str(e):
