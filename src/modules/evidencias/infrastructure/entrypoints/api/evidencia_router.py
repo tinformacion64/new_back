@@ -13,6 +13,7 @@ from ....infrastructure.persistence import EvidenciaRepositoryAdapter
 from ....application.dtos import (
     EvidenciaCreateRequest,
     EvidenciaResponse,
+    ArchivoResponse,
 )
 from ....application.use_cases import CreateEvidenciaUseCase
 
@@ -50,6 +51,12 @@ def _to_response(evidencia: Evidencia, id_tarea: UUID = None) -> EvidenciaRespon
         idElaborador=evidencia.idElaborador,
         fechaRegistro=evidencia.fechaRegistro,
         idTarea=id_tarea,
+        archivos=[
+            ArchivoResponse(
+                urlArchivo=evidencia.urlArchivo,
+                nombreOriginal=evidencia.nombreOriginal
+            )
+        ] if evidencia.urlArchivo else [],
     )
 
 

@@ -31,6 +31,14 @@ class EvidenciaCreateRequest(BaseModel):
         return value.strip()
 
 
+class ArchivoResponse(BaseModel):
+    """DTO de respuesta para un archivo adjunto."""
+    urlArchivo: str
+    nombreOriginal: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class EvidenciaResponse(BaseModel):
     """DTO de respuesta para una Evidencia creada/consultada."""
     id: UUID
@@ -41,5 +49,6 @@ class EvidenciaResponse(BaseModel):
     idElaborador: UUID
     fechaRegistro: Optional[datetime] = None
     idTarea: Optional[UUID] = None
+    archivos: List[ArchivoResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

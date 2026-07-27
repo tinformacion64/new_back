@@ -11,6 +11,7 @@ from ....infrastructure.persistence import ComunicadoRepositoryAdapter
 from ....application.dtos import (
     ComunicadoCreateRequest,
     ComunicadoResponse,
+    ArchivoResponse,
 )
 from ....application.use_cases import CreateComunicadoUseCase
 
@@ -88,6 +89,13 @@ def _to_response(comunicado: Comunicado) -> ComunicadoResponse:
         areaEmisoraNombre=comunicado.areaEmisoraNombre,
         empleadoRegistroNombre=comunicado.empleadoRegistroNombre,
         archivoUrl=comunicado.archivoUrl,
+        archivos=[
+            ArchivoResponse(
+                urlArchivo=a["urlArchivo"],
+                nombreOriginal=a["nombreOriginal"]
+            )
+            for a in comunicado.archivos
+        ] if hasattr(comunicado, "archivos") and comunicado.archivos else [],
         tareas=tareas_response,
     )
 

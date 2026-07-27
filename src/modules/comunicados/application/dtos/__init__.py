@@ -7,6 +7,7 @@ from .comunicado_dto import (
     ComunicadoCreateRequest,
     DestinatarioResponse,
     ComunicadoResponse,
+    ArchivoResponse,
 )
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     "ComunicadoCreateRequest",
     "DestinatarioResponse",
     "ComunicadoResponse",
+    "ArchivoResponse",
 ]

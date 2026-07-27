@@ -18,6 +18,7 @@ from ....application.dtos import (
     ResponsableResponse,
     ResponsableInfo,
     EvidenciaResponse,
+    ArchivoResponse,
 )
 from ....application.use_cases import CreateTareaUseCase, TransicionEstadoTareaUseCase
 
@@ -106,6 +107,12 @@ def _to_response(tarea: Tarea, estado_tarea_repository: Any, repository: TareaRe
                 fechaRegistro=ev["fechaRegistro"],
                 descripcion=ev["descripcion"],
                 elaboradorNombre=ev["elaboradorNombre"],
+                archivos=[
+                    ArchivoResponse(
+                        urlArchivo=ev["urlArchivo"],
+                        nombreOriginal=ev["nombreOriginal"]
+                    )
+                ] if ev.get("urlArchivo") else []
             )
             for ev in evidencias
         ]

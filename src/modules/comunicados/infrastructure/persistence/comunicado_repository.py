@@ -177,6 +177,17 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                 session.rollback()
                 raise
 
+    def _get_archivos(self, session, id_comunicado: UUID) -> List[Dict[str, str]]:
+        stmt = select(
+            self.archivo_table.c.urlArchivo,
+            self.archivo_table.c.nombreOriginal
+        ).where(self.archivo_table.c.idComunicado == id_comunicado)
+        rows = session.execute(stmt).fetchall()
+        return [
+            {"urlArchivo": row.urlArchivo, "nombreOriginal": row.nombreOriginal}
+            for row in rows
+        ]
+
     def get_by_id(self, id: UUID) -> Optional[Comunicado]:
         with self._get_session() as session:
             from modules.personal.infrastructure.persistence import EmpleadoRepositoryAdapter
@@ -208,7 +219,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
             row = session.execute(stmt).fetchone()
             if row is None:
                 return None
-            return Comunicado(
+            com = Comunicado(
                 id=row.idComunicado,
                 folioDoi=row.folioDoi,
                 numComunicado=row.numComunicado,
@@ -224,6 +235,8 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                 empleadoRegistroNombre=row.empleado_registro_nombre,
                 archivoUrl=row.archivo_url,
             )
+            com.archivos = self._get_archivos(session, com.id)
+            return com
 
     def get_by_folio_doi(self, folio_doi: str) -> Optional[Comunicado]:
         with self._get_session() as session:
@@ -256,7 +269,7 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
             row = session.execute(stmt).fetchone()
             if row is None:
                 return None
-            return Comunicado(
+            com = Comunicado(
                 id=row.idComunicado,
                 folioDoi=row.folioDoi,
                 numComunicado=row.numComunicado,
@@ -272,6 +285,8 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                 empleadoRegistroNombre=row.empleado_registro_nombre,
                 archivoUrl=row.archivo_url,
             )
+            com.archivos = self._get_archivos(session, com.id)
+            return com
 
     def get_all(self) -> List[Comunicado]:
         with self._get_session() as session:
@@ -301,8 +316,10 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                 )
             )
             rows = session.execute(stmt).fetchall()
-            return [
-                Comunicado(
+            
+            results = []
+            for row in rows:
+                com = Comunicado(
                     id=row.idComunicado,
                     folioDoi=row.folioDoi,
                     numComunicado=row.numComunicado,
@@ -318,8 +335,9 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     empleadoRegistroNombre=row.empleado_registro_nombre,
                     archivoUrl=row.archivo_url,
                 )
-                for row in rows
-            ]
+                com.archivos = self._get_archivos(session, com.id)
+                results.append(com)
+            return results
 
     def get_destinatarios(self, id_comunicado: UUID) -> List[Dict[str, Any]]:
         with self._get_session() as session:

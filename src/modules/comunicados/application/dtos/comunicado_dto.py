@@ -53,6 +53,14 @@ class DestinatarioResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ArchivoResponse(BaseModel):
+    """DTO de respuesta para un archivo adjunto."""
+    urlArchivo: str
+    nombreOriginal: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 from modules.tareas.application.dtos import TareaResponse
 
 
@@ -73,6 +81,7 @@ class ComunicadoResponse(BaseModel):
     areaEmisoraNombre: Optional[str] = None
     empleadoRegistroNombre: Optional[str] = None
     archivoUrl: Optional[str] = None
+    archivos: List[ArchivoResponse] = Field(default_factory=list)
     tareas: List[TareaResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

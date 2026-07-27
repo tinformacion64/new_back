@@ -27,6 +27,7 @@ class Comunicado(BaseEntity):
     areaEmisoraNombre: Optional[str] = field(default=None)
     empleadoRegistroNombre: Optional[str] = field(default=None)
     archivoUrl: Optional[str] = field(default=None)
+    archivos: list = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Validaciones de invariantes."""

@@ -8,6 +8,7 @@ from .tarea_dto import (
     ResponsableInfo,
     TareaResponse,
     EvidenciaResponse,
+    ArchivoResponse,
 )
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "ResponsableInfo",
     "TareaResponse",
     "EvidenciaResponse",
+    "ArchivoResponse",
 ]

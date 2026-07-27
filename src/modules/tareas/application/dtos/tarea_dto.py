@@ -58,6 +58,14 @@ class ResponsableResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ArchivoResponse(BaseModel):
+    """DTO de respuesta para un archivo adjunto."""
+    urlArchivo: str
+    nombreOriginal: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class EvidenciaResponse(BaseModel):
     """DTO de respuesta para una evidencia vinculada a una tarea."""
     idArchivoEvidencia: UUID
@@ -67,6 +75,7 @@ class EvidenciaResponse(BaseModel):
     fechaRegistro: Optional[datetime] = None  # Mapeado explícito para serialización
     descripcion: str
     elaboradorNombre: str
+    archivos: List[ArchivoResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
