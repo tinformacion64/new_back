@@ -2,7 +2,7 @@
 Router de API para el recurso Tarea (Sección V SGC2I).
 """
 from uuid import UUID
-from typing import List, Any
+from typing import List, Any, Optional
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -152,12 +152,19 @@ async def create_tarea(
 
 @router.get("/", response_model=List[TareaResponse])
 async def list_tareas(
+    search: Optional[str] = None,
+    id_estado: Optional[UUID] = None,
+    id_comunicado: Optional[UUID] = None,
     current_user: dict = Depends(get_current_active_user),
     repository: TareaRepository = Depends(get_tarea_repository),
     estado_tarea_repository: EstadoTareaRepository = Depends(get_estado_tarea_repository),
 ) -> List[TareaResponse]:
-    """Lista todas las tareas."""
-    tareas = repository.get_all()
+    """Lista tareas con filtros opcionales."""
+    tareas = repository.get_filtered(
+        search=search,
+        id_estado=id_estado,
+        id_comunicado=id_comunicado,
+    )
     return [_to_response(t, estado_tarea_repository, repository) for t in tareas]
 
 

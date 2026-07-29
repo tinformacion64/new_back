@@ -315,6 +315,15 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
 
     def get_all(self) -> List[Comunicado]:
         """Lista todos los comunicados de la bandeja principal."""
+        return self.get_filtered()
+
+    def get_filtered(
+        self,
+        search: Optional[str] = None,
+        id_tipo_comunicado: Optional[UUID] = None,
+        id_area: Optional[UUID] = None,
+    ) -> List[Comunicado]:
+        """Lista comunicados con filtros opcionales."""
         with self._get_session() as session:
             from modules.personal.infrastructure.persistence import EmpleadoRepositoryAdapter
             from modules.catalogos.infrastructure.persistence import AreaRepositoryAdapter
@@ -342,6 +351,14 @@ class ComunicadoRepositoryAdapter(ComunicadoRepository):
                     .outerjoin(archivo_table, self.table.c.idComunicado == archivo_table.c.idComunicado)
                 )
             )
+            
+            if search:
+                stmt = stmt.where(self.table.c.tema.ilike(f"%{search}%"))
+            if id_tipo_comunicado:
+                stmt = stmt.where(self.table.c.idTipoComunicado == id_tipo_comunicado)
+            if id_area:
+                stmt = stmt.where(emisor_alias.c.idArea == id_area)
+            
             rows = session.execute(stmt).fetchall()
             
             comunicados_map = {}

@@ -134,8 +134,35 @@ class TareaRepositoryAdapter(TareaRepository):
             return self._row_to_tarea(row)
 
     def get_all(self) -> List[Tarea]:
+        return self.get_filtered()
+
+    def get_filtered(
+        self,
+        search: Optional[str] = None,
+        id_estado: Optional[UUID] = None,
+        id_comunicado: Optional[UUID] = None,
+    ) -> List[Tarea]:
+        """Obtiene tareas con filtros opcionales."""
         with self._get_session() as session:
-            stmt = select(self.table)
+            from modules.catalogos.infrastructure.persistence import EstadoTareaRepositoryAdapter
+            from modules.comunicados.infrastructure.persistence import ComunicadoRepositoryAdapter
+            
+            estado_table = EstadoTareaRepositoryAdapter().table
+            comunicado_table = ComunicadoRepositoryAdapter().table
+            
+            stmt = select(self.table).select_from(
+                self.table
+                .join(estado_table, self.table.c.idEstadoTarea == estado_table.c.idEstadoTarea)
+                .join(comunicado_table, self.table.c.idComunicado == comunicado_table.c.idComunicado)
+            )
+            
+            if search:
+                stmt = stmt.where(self.table.c.resumenActividad.ilike(f"%{search}%"))
+            if id_estado:
+                stmt = stmt.where(self.table.c.idEstadoTarea == id_estado)
+            if id_comunicado:
+                stmt = stmt.where(self.table.c.idComunicado == id_comunicado)
+            
             rows = session.execute(stmt).fetchall()
             return [self._row_to_tarea(row) for row in rows]
 

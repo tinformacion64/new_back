@@ -41,6 +41,16 @@ class ComunicadoRepository(ABC):
         pass
 
     @abstractmethod
+    def get_filtered(
+        self,
+        search: Optional[str] = None,
+        id_tipo_comunicado: Optional[UUID] = None,
+        id_area: Optional[UUID] = None,
+    ) -> List[Comunicado]:
+        """Obtiene comunicados con filtros opcionales."""
+        pass
+
+    @abstractmethod
     def get_destinatarios(self, id_comunicado: UUID) -> List[Dict[str, Any]]:
         """Obtiene los destinatarios de un comunicado."""
         pass

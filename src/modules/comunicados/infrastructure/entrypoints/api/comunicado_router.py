@@ -147,11 +147,18 @@ async def create_comunicado(
 
 @router.get("/", response_model=List[ComunicadoResponse])
 async def list_comunicados(
+    search: Optional[str] = None,
+    id_tipo_comunicado: Optional[UUID] = None,
+    id_area: Optional[UUID] = None,
     current_user: dict = Depends(get_current_active_user),
     repository: ComunicadoRepository = Depends(get_comunicado_repository),
 ) -> List[ComunicadoResponse]:
-    """Lista todos los comunicados."""
-    comunicados = repository.get_all()
+    """Lista comunicados con filtros opcionales."""
+    comunicados = repository.get_filtered(
+        search=search,
+        id_tipo_comunicado=id_tipo_comunicado,
+        id_area=id_area,
+    )
     return [_to_response(c) for c in comunicados]
 
 

@@ -35,6 +35,16 @@ class TareaRepository(ABC):
         pass
 
     @abstractmethod
+    def get_filtered(
+        self,
+        search: Optional[str] = None,
+        id_estado: Optional[UUID] = None,
+        id_comunicado: Optional[UUID] = None,
+    ) -> List[Tarea]:
+        """Obtiene tareas con filtros opcionales."""
+        pass
+
+    @abstractmethod
     def get_responsables(self, id_tarea: UUID) -> List[Dict[str, Any]]:
         """Obtiene los responsables de una tarea."""
         pass

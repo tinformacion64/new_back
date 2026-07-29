@@ -14,6 +14,7 @@ from ....application.use_cases import (
     LoginEmpleadoUseCase,
     CreateEmpleadoUseCase,
     UpdateEmpleadoEstatusUseCase,
+    ChangePasswordUseCase,
 )
 from modules.catalogos.domain.ports import AreaRepository, CargoRepository
 from modules.catalogos.infrastructure.persistence import (
@@ -233,6 +234,78 @@ async def update_empleado_estatus(
             activo=empleado.activo,
             cargos=cargo_nombres,
         )
+    except BusinessRuleViolationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+class ChangePasswordRequest(BaseModel):
+    """Request para cambiar la contraseña del empleado."""
+    nueva_password: str
+
+
+class ResetPasswordResponse(BaseModel):
+    """Response para reseteo de contraseña."""
+    temporal_password: str
+
+
+@router.patch("/{empleado_id}/password")
+async def change_password(
+    empleado_id: UUID,
+    request: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_active_user),
+    repository: EmpleadoRepository = Depends(get_empleado_repository),
+) -> dict:
+    """
+    Cambia la contraseña del empleado autenticado.
+    El empleado solo puede cambiar su propia contraseña, a menos que
+    sea Administrador o Director.
+    """
+    cargos = current_user.get("cargos_nombres", [])
+    id_empleado_actual = UUID(current_user["idEmpleado"])
+    es_admin_o_director = any(
+        role and ("administrador" in role.lower() or "director" in role.lower())
+        for role in cargos
+    )
+
+    if empleado_id != id_empleado_actual and not es_admin_o_director:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para cambiar la contraseña de otro empleado",
+        )
+
+    use_case = ChangePasswordUseCase(repository)
+
+    try:
+        use_case.execute(
+            empleado_id=empleado_id,
+            nueva_password=request.nueva_password,
+        )
+        return {"message": "Contraseña actualizada correctamente"}
+    except BusinessRuleViolationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+@router.post("/{empleado_id}/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(
+    empleado_id: UUID,
+    current_user: dict = Depends(require_roles(["Administrador", "Director"])),
+    repository: EmpleadoRepository = Depends(get_empleado_repository),
+) -> ResetPasswordResponse:
+    """
+    Genera una contraseña temporal y la asigna al empleado.
+    Devuelve la contraseña temporal una sola vez (solo para Administrador/Director).
+    """
+    use_case = ChangePasswordUseCase(repository)
+
+    try:
+        temporal = use_case.reset_password(empleado_id)
+        return ResetPasswordResponse(temporal_password=temporal)
     except BusinessRuleViolationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
