@@ -76,6 +76,9 @@ from modules.tareas.infrastructure.entrypoints.api import tarea_router
 # Router del módulo de evidencias
 from modules.evidencias.infrastructure.entrypoints.api import evidencia_router
 
+# Router del módulo de notificaciones
+from modules.notificaciones.infrastructure.entrypoints.api import notificacion_router
+
 # Registrar routers
 app.include_router(area_router)
 app.include_router(cargo_router)
@@ -88,6 +91,7 @@ app.include_router(empleado_router)
 app.include_router(comunicado_router)
 app.include_router(tarea_router)
 app.include_router(evidencia_router)
+app.include_router(notificacion_router)
 
 
 @app.get("/")
