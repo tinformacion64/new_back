@@ -2,7 +2,7 @@
 Router de API para el recurso Comunicado (Sección IV SGC2I).
 """
 from uuid import UUID
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ....domain.entities import Comunicado, EstadoComunicado

@@ -2,10 +2,10 @@ from uuid import UUID
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from ...domain.entities import Notificacion
-from ...domain.ports import NotificacionRepository
-from ...infrastructure.persistence import NotificacionRepositoryAdapter
-from ...application.dtos import NotificacionResponse
+from ....domain.entities import Notificacion
+from ....domain.ports import NotificacionRepository
+from ....infrastructure.persistence import NotificacionRepositoryAdapter
+from ....application.dtos import NotificacionResponse
 
 from shared.infrastructure.security.security import get_current_active_user
 
