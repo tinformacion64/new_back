@@ -250,12 +250,12 @@ class ChangePasswordRequest(BaseModel):
 async def change_password(
     empleado_id: UUID,
     request: ChangePasswordRequest,
-    current_user: dict = Depends(require_roles(["Administrador"])),
+    current_user: dict = Depends(require_roles(["Administrador", "Director"])),
     repository: EmpleadoRepository = Depends(get_empleado_repository),
 ) -> dict:
     """
-    Cambia la contraseña de un empleado. Únicamente el rol Administrador
-    puede realizar esta acción (para cualquier empleado, incluido si mismo).
+    Cambia la contraseña de un empleado. Únicamente roles Administrador o Director
+    pueden realizar esta acción (para cualquier empleado, incluido si mismo).
     """
     use_case = ChangePasswordUseCase(repository)
     try:
