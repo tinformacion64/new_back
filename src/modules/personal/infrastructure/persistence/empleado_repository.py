@@ -272,6 +272,7 @@ class EmpleadoRepositoryAdapter(EmpleadoRepository):
                 email=empleado.email,
                 idArea=empleado.idArea,
                 activo=empleado.activo,
+                password_hash=empleado.password_hash,
             ).returning(
                 self.table.c.idEmpleado,
                 self.table.c.nombre,
