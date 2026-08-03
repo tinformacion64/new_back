@@ -47,6 +47,7 @@ app.add_middleware(
         "https://*.vercel.app",  # Next.js en Vercel
         "https://*.netlify.app",  # Next.js en Netlify
         "https://sgc-2-i-frontend.vercel.app",
+        "https://localhost",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -111,7 +112,7 @@ async def integrity_error_handler(request: Request, exc: IntegrityError):
     Manejador para errores de integridad (duplicados, FK inválidas, etc.).
     Retorna 409 Conflict con mensaje limpio e imprime el detalle en consola.
     """
-    print(f"⚠️ INTEGRITY ERROR en {request.url.path}: {exc}")
+    print(f" INTEGRITY ERROR en {request.url.path}: {exc}")
     return JSONResponse(
         status_code=409,
         content={
@@ -127,7 +128,7 @@ async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
     Imprime el Traceback real en consola para depuración.
     """
     import traceback
-    print(f"❌ ERROR REAL DE SQLALCHEMY en {request.url.path}: {exc}")
+    print(f" ERROR REAL DE SQLALCHEMY en {request.url.path}: {exc}")
     traceback.print_exc()
     return JSONResponse(
         status_code=500,
