@@ -145,6 +145,19 @@ async def create_tarea(
             responsables=request.responsables,
             colaboradores=request.colaboradores,
         )
+
+        from modules.notificaciones.application.use_cases.create_notificacion import CreateNotificacionUseCase
+        from modules.notificaciones.infrastructure.persistence import NotificacionRepositoryAdapter
+
+        notif_use_case = CreateNotificacionUseCase(NotificacionRepositoryAdapter())
+        for id_responsable in (request.responsables + (request.colaboradores or [])):
+            notif_use_case.execute(
+                idEmpleadoDestino=id_responsable,
+                tipo="TAREA_ASIGNADA",
+                mensaje=f"Se te asignó la tarea: {request.resumenActividad}",
+                idReferencia=tarea.id,
+            )
+
         return _to_response(tarea, estado_tarea_repository, repository)
     except (BusinessRuleViolationError, ValueError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
