@@ -39,24 +39,3 @@ class ChangePasswordUseCase:
         empleado_actualizado = self._repository.update(empleado)
         
         return empleado_actualizado
-    
-    def reset_password(self, empleado_id: UUID) -> str:
-        """
-        Genera una contraseña temporal, la hashea y la retorna.
-        Solo para uso administrativo.
-        """
-        import random
-        import string
-        
-        empleado = self._repository.get_by_id(empleado_id)
-        if empleado is None:
-            raise BusinessRuleViolationError(f"Empleado con ID {empleado_id} no encontrado")
-        
-        temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-        
-        hashed = get_password_hash(temp_password)
-        
-        empleado.password_hash = hashed
-        self._repository.update(empleado)
-        
-        return temp_password

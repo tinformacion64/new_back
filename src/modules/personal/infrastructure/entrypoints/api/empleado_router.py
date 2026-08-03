@@ -246,11 +246,6 @@ class ChangePasswordRequest(BaseModel):
     nueva_password: str
 
 
-class ResetPasswordResponse(BaseModel):
-    """Response para reseteo de contraseña."""
-    temporal_password: str
-
-
 @router.patch("/{empleado_id}/password")
 async def change_password(
     empleado_id: UUID,
@@ -284,28 +279,6 @@ async def change_password(
             nueva_password=request.nueva_password,
         )
         return {"message": "Contraseña actualizada correctamente"}
-    except BusinessRuleViolationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
-
-
-@router.post("/{empleado_id}/reset-password", response_model=ResetPasswordResponse)
-async def reset_password(
-    empleado_id: UUID,
-    current_user: dict = Depends(require_roles(["Administrador", "Director"])),
-    repository: EmpleadoRepository = Depends(get_empleado_repository),
-) -> ResetPasswordResponse:
-    """
-    Genera una contraseña temporal y la asigna al empleado.
-    Devuelve la contraseña temporal una sola vez (solo para Administrador/Director).
-    """
-    use_case = ChangePasswordUseCase(repository)
-
-    try:
-        temporal = use_case.reset_password(empleado_id)
-        return ResetPasswordResponse(temporal_password=temporal)
     except BusinessRuleViolationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
