@@ -43,9 +43,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         token = auth_header.split(" ", 1)[1]
         try:
             payload = verify_token(token)
-            print(f"[AUTH_MIDDLEWARE] Token válido para ruta {request.url.path}, usuario: {payload.get('idEmpleado')}, roles: {payload.get('cargos_nombres')}")
         except (AuthenticationError, TokenExpiredError) as e:
-            print(f"[AUTH_MIDDLEWARE] Token inválido para ruta {request.url.path}: {str(e)}")
             return JSONResponse(
                 status_code=401,
                 content={"detail": str(e)},

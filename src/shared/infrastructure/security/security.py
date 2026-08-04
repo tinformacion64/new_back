@@ -120,7 +120,6 @@ async def get_current_active_user(
 
     repo = EmpleadoRepositoryAdapter()
     empleado = repo.get_by_id(UUID(id_empleado))
-    print(f"[AUTH] Verificando activo para empleado {id_empleado}: encontrado={empleado is not None}, activo={getattr(empleado, 'activo', None)}")
     if empleado is None or not empleado.activo:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
