@@ -49,6 +49,9 @@ app.add_middleware(
         "https://sgc-2-i-frontend.vercel.app",
         "https://localhost",
     ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allow_headers=["*"],
 )
 
 # Routers del módulo de catálogos
