@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # Seguridad
     SECRET_KEY: str = "change-this-secret-key"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 120  # 2 horas para pruebas
     
     class Config:
         env_file = ".env"
